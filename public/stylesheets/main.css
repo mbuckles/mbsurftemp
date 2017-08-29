@@ -1,0 +1,131 @@
+/*Footer*/
+footer {
+  margin-top: 5rem;
+}
+i.fa.fa-github {
+  margin-left: 15px;
+  margin-top:5px;
+  font-size: 3.5em;
+  vertical-align: middle;
+}
+a.glyphicon.glyphicon-envelope {
+  margin-left: 10px;
+  margin-top:5px;
+  font-size: 2.5em;
+  top: 0.5em;
+}
+/* End Footer*/
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: black;
+  font-family: "Open Sans";
+}
+
+h1, h2, h4 {
+  text-align: center;
+  font-family: "Palanquin Dark";
+  color: #FFFFCC;
+}
+
+h5 {
+  font-family: "Palanquin Dark";
+  color: #FFFFCC;
+}
+
+.container {
+  width: 100%;
+  padding: 8px;
+}
+
+#graph {
+  width: 100%;
+}
+
+.graph-container {
+  position: relative;
+  width: 100%;
+  min-width: 900px;
+  height: 950px;
+  background-color: #F54073;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin: 2em auto;
+}
+
+.seg {
+  cursor: pointer;
+}
+.seg:hover {
+  stroke: #A7A8A8;
+}
+
+.tick line {
+  stroke-width: 1px;
+  stroke: #A7DADB;
+}
+.tick text {
+  font-family: monospace;
+  font-weight: 100;
+  font-size: 12px;
+  fill: #fff;
+}
+
+.domain {
+  fill: none;
+  stroke: #A7DADB;
+  stroke-width: 2px;
+}
+
+.legend {
+  padding: 20px;
+  background-color: #fff;
+  color: #09090a;
+}
+.legend .legend-name {
+  display: block;
+  text-align: center;
+  font-size: 1.4em;
+  color: #09090a;
+}
+.legend .legend-desc {
+  display: block;
+  font-size: 1em;
+  text-align: center;
+}
+.legend .legend-source {
+  display: block;
+  padding-top: 4px;
+  font-size: 0.7em;
+  text-align: right;
+  color: #A7DADB;
+}
+.legend .legend-source:before {
+  content: "Source: ";
+}
+
+.graph-legend {
+  fill: #FFFFCC;
+  font-size: 0.8em;
+}
+
+.axis-title {
+  fill: #FFFFCC;
+  font-size: 1em;
+}
+
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 170px;
+  height: 80px;
+  color: #FFFFCC;
+  font-family: "Times New Roman", Times, serif;
+  background: #bc144c;
+  border: 0px;
+  border-radius: 0.5em;
+  pointer-events: none;
+}

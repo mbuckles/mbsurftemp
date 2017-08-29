@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <% include ../partials/header.ejs %>
+</head>
+<body>
+  <div class="container graph-container">
+    <h1>D3.js Monthly Global Land-Surface Temperature</h1>
+    <h2>1753 - 2015</h2>
+    <h4>Temperatures are in Celsius and reported as anomalies relative to the Jan 1951-Dec 1980 average.</h4>
+    <h4>Estimated Jan 1951-Dec 1980 absolute temperature ℃: 8.66 +/- 0.07</h4>
+      <svg id="graph"></svg>
+    </div>
+ <footer>
+   <% include ../partials/footer.ejs %>
+   <script>
+   // globals
+   // get json
+   const url = "https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/global-temperature.json"; url
+   let svgW = 1000; //svg width
+   let svgH = 600; //svg height
+   let legH = 100; //legend height
+   let div = d3.select("body").append("div")
+       .attr("class", "tooltip")
+       .style("opacity", 1);
+   //basic styling
+   let colors = ["#5949a3", "#2d86bc", "#5ec1a2", "#addba6", "#e2f291", "#fcfcb8", "#f9d97f", "#f7a85b", "#f7912e", "#d6394b", "#af0149"];
+   let padding = {
+     top: 15,
+     right: 20,
+     bottom: 100,
+     left: 100
+   };
+   // graph rectangle
+   let gRect = {
+       x: padding.left,
+       y: padding.top,
+       w: svgW - padding.left - padding.right,
+       h: svgH - padding.top - padding.bottom
+     }
+
+   // data and svg element
+   let data, svg, tooltip;
+   //scales
+   let scaleX, scaleY, baseTemp;
+   // get  json data
+   d3.json(url, function(error, json) {
+     if (error) {
+       return console.warn(error);
+     }
+     init(json);
+   });
+
+   // init graph
+   function init(json) {
+     data = json.monthlyVariance;
+     baseTemp = Number(json.baseTemperature);
+     svg = d3.select("#graph");
+     // set viewBox rather then width and height attrs
+     // make graph scalable
+     svg.attr({
+       viewBox: "0 0 " + svgW + " " + svgH
+     });
+
+     calcScales();
+     initTooltip()
+     drawGraph();
+     drawAxis();
+     drawLegend();
+   }
+   //darwing axis x and y
+   function drawAxis() {
+     let xAxis = d3.svg.axis()
+       .scale(scaleX)
+       .tickFormat(function(v) {
+         return v
+       });
+     svg.append("g")
+       .attr({
+         "transform": "translate(" + padding.left + "," + (gRect.h + padding.top) + ")"
+       })
+       .call(xAxis)
+       .append("text")
+       .text("Years")
+       .attr({y: 45, x: gRect.w/2, class: "axis-title", "text-anchor":"middle"})
+
+   let yAxis = d3.svg.axis()
+       .scale(scaleY)
+       .tickFormat(function(v) {
+         let frm = d3.time.format("%B");
+         return frm(new Date("1970-"+("0"+v).substr(-2)));
+       })
+       .orient("left");
+
+   svg.append("g")
+       .attr({
+         "transform": "translate(" + (padding.left) + "," + padding.top + ")"
+       })
+       .call(yAxis)
+       .attr({id: "y-axis"})
+       .append("text")
+       .text("Months")
+       .attr({transform: "rotate(270)", y: 20-padding.left, x: -gRect.h/2, class: "axis-title", "text-anchor":"middle"})
+   svg.select("#y-axis")
+       .selectAll(".tick text")
+       .style("text-anchor", "end")
+       .attr({y: -gRect.h/24});
+   }
+   // drawing graph
+   function drawGraph() {
+     let rh = gRect.h/12;
+     let rw = gRect.w / (d3.max(data, function(d) {
+           return d.year
+         }) - d3.min(data, function(d) {
+           return d.year
+         }))
+     //rw = Math.ceil(rw);
+
+     let minVar = d3.min(data, function(d) {
+                       return d.variance
+                     })
+     let maxVar = d3.max(data, function(d) {
+                       return d.variance
+                     })
+     let dVar = maxVar - minVar;
+     let frm = d3.time.format("%Y - %B");
+     svg.selectAll("g")
+       .data(data)
+       .enter()
+       .append("rect")
+       .attr({
+         x:function(v){return  gRect.x + scaleX(v.year)},
+         y: function(v){return padding.top + v.month * rh - rh},
+         width: rw,
+         height: rh,
+         class: "seg",
+         fill: function(v){return colors[Math.floor(11*(v.variance-minVar)/dVar)]}
+       })
+
+    .on("mouseover", function(d) {
+           let svgRatio = svg[0][0].getBoundingClientRect().width / svgW;
+           let left = this.x.baseVal.value * svgRatio;
+           let top = this.y.baseVal.value  * svgRatio + 160;
+           div.attr({class: "tooltip"})
+           div.transition()
+              .duration(100)
+              .style("opacity", .9)
+              .style({
+               left: left -30  + "px",
+               top: top - 30 + "px"
+             })
+           let frm = d3.time.format("%Y - %B");
+           div.html("<h5>" + frm(new Date(d.year + "-" + ("0"+d.month).substr(-2))) + "</h5>" + "<h5> Abs. Temp.     " +
+           (d3.round(baseTemp + d.variance, 3)) + " &#8451"+ "</h5>" + "<h5>Variance "+
+           (d.variance) + " &#8451" + "</h5>")
+       })
+   .on("mouseout", function(d) {
+         div.attr({
+           class: "tooltip"
+         })
+         div.transition()
+            .duration(500)
+            .style("opacity", 0)
+       });
+
+   }
+
+   function calcScales() {
+     scaleX = d3.scale.linear()
+       .domain([
+         d3.min(data, function(d) {
+           return d.year
+         }), d3.max(data, function(d) {
+           return d.year
+         })
+       ])
+       .range([0, gRect.w]);
+
+     scaleY = d3.scale.linear()
+       .domain([
+         d3.min(data, function(d) {
+           return d.month
+         }) - 1, d3.max(data, function(d) {
+           return d.month
+         })
+       ])
+       .range([0, gRect.h]);
+   }
+   //init tooltip
+   function initTooltip() {
+     //tooltip = {};
+    //tooltip.el = d3.select("class","tooltip");
+    //tooltip.date = d3.select("#tooltip .date");
+    //tooltip.temp = d3.select("#tooltip .temp");
+   //tooltip.diff = d3.select("#tooltip .diff");
+   }
+
+   function drawLegend(){
+     let leg = svg.append("g")
+       .attr({"transform": "translate(200,10)"});
+       leg.selectAll("rect")
+      .data(colors)
+      .enter()
+      .append("rect")
+      .attr({
+      x: function(v, i){return i*50 +210},
+         y: 550,
+         width: 60,
+         height: 15,
+         fill: function(v){return v}
+       })
+
+     let minVar = d3.min(data, function(d) {
+                       return d.variance
+                     })
+     let maxVar = d3.max(data, function(d) {
+                       return d.variance
+                     })
+     let dVar = (maxVar - minVar)/10;
+
+     leg.selectAll("text")
+       .data(colors)
+       .enter()
+       .append("text")
+       .attr({
+         x: function(v, i){return i*50 + 240},
+         y: 585,
+         class: "graph-legend",
+         "text-anchor": "middle"
+       })
+       .text(function(v, i){
+         return d3.round(dVar*i, 1)
+      })
+
+   }
+   </script>
+ </footer>
+</html>
+</body>
